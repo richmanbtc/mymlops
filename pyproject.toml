@@ -1,0 +1,20 @@
+[build-system]
+requires = ["pdm-backend"]
+build-backend = "pdm.backend"
+
+[project]
+version = "0.0.1"
+name = "mymlops"
+dependencies = [
+    "click>=8.1.7",
+    "python-dotenv>=0.21.1",
+]
+requires-python = ">= 3.7"
+readme = "README.md"
+license = {file = "LICENSE"}
+
+[project.scripts]
+mymlops = "mymlops.main:cli"
+
+[tool.pdm]
+distribution = false
