@@ -1,8 +1,23 @@
 
+## todo
+
+- handle notebook execution error
+
 ## memo
 
 - config: mymlops.yml
 - idle shutdown
+
+## gcp batch vs gce
+
+- use gce
+- gcp batch sometimes did not start the job for unknown reasons
+- I decided to use gce because it is new, there is little information, and it is not mature.
+
+## batch docs
+
+- supported os image https://cloud.google.com/batch/docs/vm-os-environment-overview?hl=ja
+- job reference https://cloud.google.com/batch/docs/reference/rest/v1/projects.locations.jobs#Disk
 
 ## install
 
