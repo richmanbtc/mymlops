@@ -20,6 +20,10 @@ def do_commit(config, config_name, path):
     with open(path, 'rb') as f:
         input_gzip_base64 = base64.b64encode(gzip.compress(f.read())).decode('ascii')
 
+    optipng_ipynb_path = os.path.join(os.path.dirname(__file__), 'optipng_ipynb.js')
+    with open(optipng_ipynb_path, 'rb') as f:
+        optipng_ipynb_gzip_base64 = base64.b64encode(gzip.compress(f.read())).decode('ascii')
+
     branch = config['repository'].get('branch', 'master')
 
     assert path[-6:] == '.ipynb'
@@ -34,6 +38,7 @@ def do_commit(config, config_name, path):
     zone = instance_type['zone']
 
     command = commit_config['command']
+    compression = commit_config.get('compression', False)
 
     commit_message = f'commit {config_name} {commit_dir}'
 
@@ -45,6 +50,14 @@ function cleanup {
     docker run google/cloud-sdk gcloud compute instances delete $NAME --zone=$ZONE --quiet
 }
 trap cleanup EXIT
+'''
+
+    compress_script = f'''
+echo "{optipng_ipynb_gzip_base64}" | base64 -d | gzip -d > /tmp/optipng_ipynb.js
+docker run \
+  -v /tmp/optipng_ipynb.js:/optipng_ipynb.js \
+  -v "$PWD/{commit_dir}":/commit_dir \
+  node bash -c 'npm install -g optipng-bin && (cat /commit_dir/output.ipynb | node /optipng_ipynb.js > /tmp/a) && mv /tmp/a /commit_dir/output.ipynb'
 '''
 
     script = f'''#!/bin/bash
@@ -79,6 +92,8 @@ echo "{input_gzip_base64}" | base64 -d | gzip -d > "{commit_dir}/output.ipynb"
 
 {command} "{commit_dir}/output.ipynb"
 
+{compress_script if compression else ''}
+
 git add "{commit_dir}"
 git commit -m "{commit_message}"
 git stash
@@ -107,7 +122,7 @@ git push origin "{branch}"
         ]
         run_redirect(options)
 
-    @retry(tries=5, delay=1)
+    @retry(tries=10, delay=1)
     def logs():
         do_startup_logs(vm_name, zone)
 

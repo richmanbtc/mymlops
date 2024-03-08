@@ -19,9 +19,10 @@ def commit(config_name, path):
 
 @cli.command()
 @click.argument('instance_name')
-def startup_logs(instance_name):
+@click.argument('zone')
+def startup_logs(instance_name, zone):
     """tail startup script logs of compute engine instance"""
-    do_startup_logs(instance_name)
+    do_startup_logs(instance_name, zone)
 
 @cli.command()
 @click.argument('config_name')
