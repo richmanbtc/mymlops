@@ -3,6 +3,7 @@ import datetime
 import tempfile
 import base64
 import gzip
+import json
 from retry import retry
 from .consts import GITHUB_KNOWN_HOSTS
 from .utils import run_redirect
@@ -17,8 +18,17 @@ def do_commit(config, config_name, path):
     with open(config['repository']['key'], 'r') as f:
         deploy_key = f.read()
 
-    with open(path, 'rb') as f:
-        input_gzip_base64 = base64.b64encode(gzip.compress(f.read())).decode('ascii')
+    with open(path, 'r') as f:
+        input = json.load(f)
+        cells = input['cells']
+        for i in range(len(cells)):
+            if 'outputs' in cells[i]:
+                cells[i]['outputs'] = []
+            if 'execution_count' in cells[i]:
+                cells[i]['execution_count'] = None
+
+    input_gzip_base64 = base64.b64encode(gzip.compress(
+        json.dumps(input).encode('utf-8'))).decode('ascii')
 
     optipng_ipynb_path = os.path.join(os.path.dirname(__file__), 'optipng_ipynb.js')
     with open(optipng_ipynb_path, 'rb') as f:
@@ -115,7 +125,7 @@ git push origin "{branch}"
             f'--source-instance-template={instance_template}',
             f'--metadata-from-file=startup-script={script_path}',
             f'--zone={zone}',
-            '--scopes=compute-rw',
+            # '--scopes=compute-rw',
             # '--provisioning-model=SPOT',
             # '--max-run-duration=24h',
             # '--instance-termination-action=DELETE',

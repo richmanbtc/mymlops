@@ -1,12 +1,46 @@
 
 ## todo
 
-- handle notebook execution error
-
-## memo
-
-- config: mymlops.yml
+- gpu
+- start
 - idle shutdown
+- raise in run_redirect
+- commit message
+- fix --allow-error
+
+## setup
+
+instance template
+
+- os: cos
+- required scope: compute engine read/write (for self deletion)
+
+config
+
+- see mymlops-testrepo
+
+## command completion
+
+add this to ~/.bash_profile
+
+```bash
+eval "$(_MYMLOPS_COMPLETE=bash_source mymlops)"
+```
+
+bash >=4.4 required. how to check shell version
+
+```bash
+$SHELL --version
+```
+
+change shell
+
+- https://qiita.com/pnpnd1111/items/2bb7927cea9134574dc3
+
+## nbconvert --allow-error
+
+- Sometimes it does not output to a file.
+- and exit code is 0
 
 ## gcp batch vs gce
 
