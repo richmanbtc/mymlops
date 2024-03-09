@@ -5,7 +5,6 @@
 - idle shutdown
 - raise in run_redirect
 - commit message
-- fix --allow-error
 
 ## setup
 
@@ -17,6 +16,11 @@ instance template
 config
 
 - see mymlops-testrepo
+
+## troubleshooting
+
+- Q: An unexecuted output.ipynb has been uploaded.
+- A: Please check if the Docker running the notebook is mounting the directory that includes output.ipynb.
 
 ## command completion
 
@@ -35,11 +39,6 @@ $SHELL --version
 change shell
 
 - https://qiita.com/pnpnd1111/items/2bb7927cea9134574dc3
-
-## nbconvert --allow-error
-
-- Sometimes it does not output to a file.
-- and exit code is 0
 
 ## gcp batch vs gce
 
@@ -113,3 +112,7 @@ any standard exists?
 - python
 - Any language is fine since it uses gcloud cli.
 - I might use pandas in the future, so I use python.
+
+## memo
+
+- nbconvert --allow-error
