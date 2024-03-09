@@ -1,7 +1,6 @@
 
 ## todo
 
-- gpu
 - start
 - idle shutdown
 - raise in run_redirect

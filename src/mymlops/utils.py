@@ -1,3 +1,4 @@
+import copy
 import subprocess
 
 def run_redirect(command):
@@ -5,3 +6,13 @@ def run_redirect(command):
 
     for line in proc.stdout:
         print(line.decode('utf-8').strip())
+
+def remove_notebook_output(x):
+    x = copy.deepcopy(x)
+    cells = x['cells']
+    for i in range(len(cells)):
+        if 'outputs' in cells[i]:
+            cells[i]['outputs'] = []
+        if 'execution_count' in cells[i]:
+            cells[i]['execution_count'] = None
+    return x

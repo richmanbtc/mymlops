@@ -6,7 +6,7 @@ import gzip
 import json
 from retry import retry
 from .consts import GITHUB_KNOWN_HOSTS
-from .utils import run_redirect
+from .utils import run_redirect, remove_notebook_output
 from .startup_logs import do_startup_logs
 
 
@@ -19,14 +19,7 @@ def do_commit(config, config_name, path):
         deploy_key = f.read()
 
     with open(path, 'r') as f:
-        input = json.load(f)
-        cells = input['cells']
-        for i in range(len(cells)):
-            if 'outputs' in cells[i]:
-                cells[i]['outputs'] = []
-            if 'execution_count' in cells[i]:
-                cells[i]['execution_count'] = None
-
+        input = remove_notebook_output(json.load(f))
     input_gzip_base64 = base64.b64encode(gzip.compress(
         json.dumps(input).encode('utf-8'))).decode('ascii')
 
@@ -46,6 +39,8 @@ def do_commit(config, config_name, path):
     instance_type = config['instance_types'][commit_config['instance_type']]
     instance_template = instance_type['instance_template']
     zone = instance_type['zone']
+    accelerator_type = instance_type.get('accelerator_type')
+    machine_type = instance_type.get('machine_type')
 
     command = commit_config['command']
     compression = commit_config.get('compression', False)
@@ -70,6 +65,12 @@ docker run \
   node bash -c 'npm install -g optipng-bin && (cat /commit_dir/output.ipynb | node /optipng_ipynb.js > /tmp/a) && mv /tmp/a /commit_dir/output.ipynb'
 '''
 
+    gpu_script = '''
+cos-extensions install gpu
+mount --bind /var/lib/nvidia /var/lib/nvidia
+mount -o remount,exec /var/lib/nvidia
+'''
+
     script = f'''#!/bin/bash
 set -ex
 
@@ -92,6 +93,8 @@ alias docker-compose='docker run --rm \
     -v "$PWD:$PWD" \
     -w="$PWD" \
     docker/compose:1.24.0'
+
+{gpu_script if accelerator_type is not None else ''}
 
 cd /tmp
 git clone --recursive -b "{branch}" "{repo_url}" repo
@@ -125,11 +128,14 @@ git push origin "{branch}"
             f'--source-instance-template={instance_template}',
             f'--metadata-from-file=startup-script={script_path}',
             f'--zone={zone}',
+            f'--accelerator=type={accelerator_type},count=1' if accelerator_type is not None else None,
+            f'--machine-type={machine_type}' if machine_type is not None else None,
             # '--scopes=compute-rw',
             # '--provisioning-model=SPOT',
             # '--max-run-duration=24h',
             # '--instance-termination-action=DELETE',
         ]
+        options = [x for x in options if x is not None]
         run_redirect(options)
 
     @retry(tries=10, delay=1)
