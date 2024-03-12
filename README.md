@@ -5,6 +5,7 @@
 - idle shutdown
 - raise in run_redirect
 - commit message
+- gcp project from config
 
 ## setup
 
