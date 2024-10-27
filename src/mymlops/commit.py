@@ -18,10 +18,6 @@ def do_commit(config, config_name, path):
     input_gzip_base64 = base64.b64encode(gzip.compress(
         json.dumps(input).encode('utf-8'))).decode('ascii')
 
-    optipng_ipynb_path = os.path.join(os.path.dirname(__file__), 'optipng_ipynb.js')
-    with open(optipng_ipynb_path, 'rb') as f:
-        optipng_ipynb_gzip_base64 = base64.b64encode(gzip.compress(f.read())).decode('ascii')
-
     branch = config['repository'].get('branch', 'master')
 
     assert path[-6:] == '.ipynb'
@@ -35,25 +31,14 @@ def do_commit(config, config_name, path):
     zone = instance_type_config['zone']
 
     command = commit_config['command']
-    compression = commit_config.get('compression', False)
 
     commit_message = f'commit {config_name} {commit_dir}'
-
-    compress_script = f'''
-echo "{optipng_ipynb_gzip_base64}" | base64 -d | gzip -d > /tmp/optipng_ipynb.js
-docker run \
-  -v /tmp/optipng_ipynb.js:/optipng_ipynb.js \
-  -v "$PWD/{commit_dir}":/commit_dir \
-  node bash -c 'npm install -g optipng-bin && (cat /commit_dir/output.ipynb | node /optipng_ipynb.js > /tmp/a) && mv /tmp/a /commit_dir/output.ipynb'
-'''
 
     script = f'''
 mkdir -p "{commit_dir}"
 echo "{input_gzip_base64}" | base64 -d | gzip -d > "{commit_dir}/output.ipynb"
 
 {command} "{commit_dir}/output.ipynb"
-
-{compress_script if compression else ''}
 
 git add "{commit_dir}"
 git commit -m "{commit_message}"
