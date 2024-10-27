@@ -1,22 +1,30 @@
+## current status
 
-## todo
+- only commit command is implemented
+
+todo
 
 - start
 - idle shutdown
-- raise in run_redirect
 - commit message
 - gcp project from config
 
-## setup
+## install
 
-instance template
+```bash
+git clone https://github.com/richmanbtc/mymlops.git
+cd mymlops
+pip install -e .
+```
 
-- os: cos
-- required scope: compute engine read/write (for self deletion)
+## how to use
 
-config
+```bash
+mymlops --help
+```
 
-- see mymlops-testrepo
+see
+https://github.com/richmanbtc/mymlops-testrepo
 
 ## troubleshooting
 
@@ -41,79 +49,50 @@ change shell
 
 - https://qiita.com/pnpnd1111/items/2bb7927cea9134574dc3
 
-## gcp batch vs gce
+## design notes
+
+### gcp batch vs gce
 
 - use gce
 - gcp batch sometimes did not start the job for unknown reasons
 - I decided to use gce because it is new, there is little information, and it is not mature.
 
-## batch docs
+batch docs
 
 - supported os image https://cloud.google.com/batch/docs/vm-os-environment-overview?hl=ja
 - job reference https://cloud.google.com/batch/docs/reference/rest/v1/projects.locations.jobs#Disk
 
-## install
+### mymlops.yml
 
-pip install  -e .
+schema is defined in src/mymlops/config_schema.json
 
-## command
+### commit specification
 
-- mymlops commit cpu notebook_path
-- mymlops commit gpu notebook_path
-- mymlops start cpu1
-- mymlops start cpu2
+Division of responsibilities between mymlops and each repository
 
-## mymlops.yml
+| process              | mymlops | repository |
+|----------------------|--------|------------|
+| start gce instance   | o      |            |
+| setup gce instance   | o      |            |
+| git clone repo       | o      |            |
+| execute notebook     |        | o          |
+| git push output_repo | o      |            |
+| delete gce instance  | o      |            |
 
-commit:
-  cpu:
-    instance_type: cpu_default
-    command: docker-compose ...
-  gpu:
-    instance_type: gpu_default
-    command: docker-compose ...
+In each repository, the following actions are required:
 
-start:
-  cpu1:
-    instance_type: cpu_default
-  cpu2:
-    instance_type: cpu_default
+- Execute the notebook at the specified path and overwrite it with the execution results.
+- If necessary, create an artifacts directory in the same directory as the notebook and place the outputs inside it.
 
-instance_type:
-  cpu_default:
-    machine_type: a
-    gpu: a
-    spot: true
-
-## commit interface that must be defined in each repo
-
-- [command defined in config] notebook_path
-- input: notebook relative path from repository root
-- output:
-- notebook_path/[datetime]/output.ipynb
-- notebook_path/[datetime]/metrics.json
-- notebook_path/[datetime]/params.json
-- notebook_path/[datetime]/artifacts/*.*
-
-any standard exists?
-
-## start
+### start
 
 - create or start compute engine instance
 - start jupyter (startup script)
 - ssh tunnel
 
-## instance type
+### papermill vs nbconvert
 
-- defined in config
-- used for commit config and start config
-
-## programming language
-
-- python
-- Any language is fine since it uses gcloud cli.
-- I might use pandas in the future, so I use python.
-
-## memo
-
-- nbconvert --allow-error
+By default, nbconvert does not update the ipynb file when an error occurs.
+However, when you use the --allow-error option, it updates the ipynb file and does not stop at the first error.
+On the other hand, papermill stops when an error occurs and updates the ipynb file with execution results up to the error point.
+Since papermill's behavior is more convenient, it is recommended to use papermill.
