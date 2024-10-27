@@ -2,60 +2,39 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "type": "object",
   "properties": {
-    "commits": {
+    "commit": {
       "type": "object",
       "properties": {
-        "cpu": {
+        "instance": {
           "type": "object",
           "properties": {
-            "instance_type": { "type": "string" },
-            "command": { "type": "string" },
-            "compression": { "type": "boolean" }
+            "zone": { "type": "string" },
+            "accelerator_type": { "type": "string" },
+            "machine_type": { "type": "string" }
           },
-          "required": ["instance_type", "command", "compression"]
+          "required": ["zone", "machine_type"]
         },
-        "gpu": {
+        "repository": {
           "type": "object",
           "properties": {
-            "instance_type": { "type": "string" },
-            "command": { "type": "string" },
-            "compression": { "type": "boolean" }
+            "url": { "type": "string", "format": "uri" },
+            "branch": { "type": "string" }
           },
-          "required": ["instance_type", "command", "compression"]
-        }
-      },
-      "required": ["cpu", "gpu"]
-    },
-    "instance_types": {
-      "type": "object",
-      "properties": {
-        "cpu_default": {
+          "required": ["url"]
+        },
+        "output_repository": {
           "type": "object",
           "properties": {
-            "instance_template": { "type": "string" },
-            "zone": { "type": "string" }
+            "url": { "type": "string", "format": "uri" },
+            "branch": { "type": "string" }
           },
-          "required": ["instance_template", "zone"]
-        }
+          "required": ["url"]
+        },
+        "command": { "type": "string" }
       },
-      "required": ["cpu_default"]
+      "required": ["instance", "repository", "output_repository", "command"]
     },
-    "repository": {
-      "type": "object",
-      "properties": {
-        "remote": { "type": "string" },
-        "key": { "type": "string" }
-      },
-      "required": ["remote", "key"]
-    },
-    "output_repository": {
-      "type": "object",
-      "properties": {
-        "remote": { "type": "string" },
-        "key": { "type": "string" }
-      },
-      "required": ["remote", "key"]
-    }
+    "deploy_key": { "type": "string" }
   },
-  "required": ["commits", "instance_types", "repository", "output_repository"]
+  "required": ["commit", "deploy_key"]
 }

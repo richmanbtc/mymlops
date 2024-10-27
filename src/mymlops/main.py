@@ -10,6 +10,12 @@ def cli():
     pass
 
 @cli.command()
+def validate():
+    """validate config"""
+    read_config()
+    print('ok')
+
+@cli.command()
 @click.argument('path', type=click.Path(exists=True))
 @click.option('-a', '--artifacts', is_flag=True, show_default=True, default=False)
 def commit(path, artifacts):
