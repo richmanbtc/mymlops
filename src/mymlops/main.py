@@ -10,12 +10,12 @@ def cli():
     pass
 
 @cli.command()
-@click.argument('config_name')
-@click.argument('path')
-def commit(config_name, path):
+@click.argument('path', type=click.Path(exists=True))
+@click.option('-a', '--artifacts', is_flag=True, show_default=True, default=False)
+def commit(path, artifacts):
     """run notebook and save outputs like kaggle commit"""
     config = read_config()
-    do_commit(config, config_name, path)
+    do_commit(config['commit'], config['deploy_key'], path, artifacts)
 
 @cli.command()
 @click.argument('instance_name')

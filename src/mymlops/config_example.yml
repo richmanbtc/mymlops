@@ -1,0 +1,15 @@
+commit:
+  instance:
+    instance_template: mymlops-cpu
+    zone: us-central1-a
+    accelerator_type: nvidia-tesla-v100
+    machine_type: n1-standard-8
+  repository:
+    url: git@github.com:richmanbtc/mymlops-testrepo.git
+    branch: develop
+  output_repository:
+    url: git@github.com:richmanbtc/mymlops-testrepo.git
+    branch: output
+  command: scripts/mymlops_commit.sh
+
+deploy_key: /path/to/deploy_key

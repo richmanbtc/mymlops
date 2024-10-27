@@ -4,20 +4,16 @@ from .consts import GITHUB_KNOWN_HOSTS
 from .utils import run_redirect
 
 
-def gce_create(config, vm_name, instance_type, startup_script='', delete_after_startup=False):
-    print(f'gce_create instance_type {instance_type}')
+def gce_create(vm_name, instance_config, deploy_key, startup_script='', delete_after_startup=False):
+    print(f'gce_create vm_name {vm_name} instance_config {instance_config}')
 
-    repo_url = config['repository']['remote']
-    with open(config['repository']['key'], 'r') as f:
-        deploy_key = f.read()
+    with open(deploy_key, 'r') as f:
+        deploy_key_content = f.read()
 
-    branch = config['repository'].get('branch', 'master')
-
-    instance_type_config = config['instance_types'][instance_type]
-    instance_template = instance_type_config['instance_template']
-    zone = instance_type_config['zone']
-    accelerator_type = instance_type_config.get('accelerator_type')
-    machine_type = instance_type_config.get('machine_type')
+    zone = instance_config['zone']
+    accelerator_type = instance_config.get('accelerator_type')
+    machine_type = instance_config.get('machine_type')
+    image = 'projects/ml-images/global/images/c0-deeplearning-common-cu123-v20240922-debian-11-py310'
 
     # https://qiita.com/relu/items/6a3bb240084948f4a578
     cleanup_script = '''
@@ -26,13 +22,7 @@ function cleanup {
     ZONE=$(curl metadata.google.internal/computeMetadata/v1/instance/zone -H "Metadata-Flavor: Google" | cut -d/ -f4)
     docker run google/cloud-sdk gcloud compute instances delete $NAME --zone=$ZONE --quiet
 }
-trap cleanup EXIT
-'''
-
-    gpu_script = '''
-cos-extensions install gpu
-mount --bind /var/lib/nvidia /var/lib/nvidia
-mount -o remount,exec /var/lib/nvidia
+#trap cleanup EXIT
 '''
 
     script = f'''#!/bin/bash
@@ -44,33 +34,16 @@ export HOME=/root
 
 mkdir -p ~/.ssh
 chmod 700 ~/.ssh
-echo "{deploy_key}" > ~/.ssh/id_rsa
+echo "{deploy_key_content}" > ~/.ssh/id_rsa
 chmod 400 ~/.ssh/id_rsa
 echo "{GITHUB_KNOWN_HOSTS}" > ~/.ssh/known_hosts
-export GIT_SSH_COMMAND="ssh -o "UserKnownHostsFile=/home/work/.ssh/known_hosts" -i ~/.ssh/id_rsa -F /dev/null"
+export GIT_SSH_COMMAND="ssh -o "UserKnownHostsFile=/root/.ssh/known_hosts" -i ~/.ssh/id_rsa -F /dev/null"
 
 git config --global user.email "you@example.com"
 git config --global user.name "Your Name"
 
-cat << 'EOF' >> /root/.bashrc
-alias docker-compose='docker run --rm \
-    -v /var/run/docker.sock:/var/run/docker.sock \
-    -v "$PWD:$PWD" \
-    -w="$PWD" \
-    docker/compose:1.24.0'
-EOF
-
-shopt -s expand_aliases
-source /root/.bashrc
-
-{gpu_script if accelerator_type is not None else ''}
-
-mkdir -p /home/work
-cd /home/work
-if [ ! -d "repo" ]; then
-    git clone --recursive -b "{branch}" "{repo_url}" repo
-fi
-cd repo
+apt-get update
+apt-get install -y docker-compose-plugin
 
 {startup_script}
 '''
@@ -86,15 +59,14 @@ cd repo
             'instances',
             'create',
             vm_name,
-            f'--source-instance-template={instance_template}',
             f'--metadata-from-file=startup-script={script_path}',
             f'--zone={zone}',
             f'--accelerator=type={accelerator_type},count=1' if accelerator_type is not None else None,
             f'--machine-type={machine_type}' if machine_type is not None else None,
-            # '--scopes=compute-rw',
-            # '--provisioning-model=SPOT',
-            # '--max-run-duration=24h',
-            # '--instance-termination-action=DELETE',
+            '--scopes=default,bigquery,compute-rw',
+            '--provisioning-model=SPOT',
+            f'--create-disk=auto-delete=yes,boot=yes,device-name=mymlops,image={image},mode=rw,size=100,type=pd-ssd',
         ]
+
         options = [x for x in options if x is not None]
         run_redirect(options)

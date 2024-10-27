@@ -7,6 +7,10 @@ def run_redirect(command):
     for line in proc.stdout:
         print(line.decode('utf-8').strip())
 
+    proc.wait()
+    if proc.returncode != 0:
+        raise Exception(f'command failed {proc.returncode}: {command}')
+
 def remove_notebook_output(x):
     x = copy.deepcopy(x)
     cells = x['cells']
