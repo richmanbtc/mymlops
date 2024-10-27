@@ -40,31 +40,36 @@ set -ex
 
 {cleanup_script if delete_after_startup else ''}
 
-export HOME=/home/work
-mkdir -p /home/work
+export HOME=/root
 
 mkdir -p ~/.ssh
 chmod 700 ~/.ssh
 echo "{deploy_key}" > ~/.ssh/id_rsa
 chmod 400 ~/.ssh/id_rsa
 echo "{GITHUB_KNOWN_HOSTS}" > ~/.ssh/known_hosts
-export GIT_SSH_COMMAND="ssh -o "UserKnownHostsFile=/home/work/.ssh/known_hosts" -i /home/work/.ssh/id_rsa -F /dev/null"
+export GIT_SSH_COMMAND="ssh -o "UserKnownHostsFile=/home/work/.ssh/known_hosts" -i ~/.ssh/id_rsa -F /dev/null"
 
 git config --global user.email "you@example.com"
 git config --global user.name "Your Name"
 
-shopt -s expand_aliases
+cat << 'EOF' >> /root/.bashrc
 alias docker-compose='docker run --rm \
     -v /var/run/docker.sock:/var/run/docker.sock \
     -v "$PWD:$PWD" \
     -w="$PWD" \
     docker/compose:1.24.0'
+EOF
+
+shopt -s expand_aliases
+source /root/.bashrc
 
 {gpu_script if accelerator_type is not None else ''}
 
+mkdir -p /home/work
 cd /home/work
-git clone --recursive -b "{branch}" "{repo_url}" repo
-
+if [ ! -d "repo" ]; then
+    git clone --recursive -b "{branch}" "{repo_url}" repo
+fi
 cd repo
 
 {startup_script}

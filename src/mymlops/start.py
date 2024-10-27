@@ -11,8 +11,7 @@ def do_start(config, config_name, recreate):
     start_config = config['starts'][config_name]
     instance_type_config = config['instance_types'][start_config['instance_type']]
     zone = instance_type_config['zone']
-    local_port = start_config['local_port']
-    port = start_config['port']
+    ports = start_config['ports']
 
     if recreate:
         raise Exception('not implemented')
@@ -23,7 +22,7 @@ def do_start(config, config_name, recreate):
     elif desc['status'] == 'TERMINATED':
         _start(vm_name, zone)
 
-    for i in range(10):
+    for _ in range(10):
         desc = _describe(vm_name, zone)
         if desc is not None and desc['status'] == 'RUNNING':
             break
@@ -36,9 +35,13 @@ def do_start(config, config_name, recreate):
         vm_name,
         f'--zone={zone}',
         '--',
-        '-NL',
-        f'{local_port}:localhost:{port}'
+        '-N',
     ]
+    for p in ports:
+        pair = p.split(':')
+        proxy_command += [
+            '-L', f'{pair[0]}:localhost:{pair[1]}',
+        ]
     print(proxy_command)
     run_redirect(proxy_command)
 
@@ -85,11 +88,8 @@ def _create(config, config_name, vm_name):
 
     start_config = config['starts'][config_name]
     instance_type_config = config['instance_types'][start_config['instance_type']]
-    zone = instance_type_config['zone']
 
     command = start_config['command']
-
-
 
     script = f'''
 {command}
