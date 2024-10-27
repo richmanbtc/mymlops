@@ -9,7 +9,7 @@ from .startup_logs import do_startup_logs
 from .gce_create import gce_create
 
 
-def do_commit(commit_config, deploy_key, path, artifacts):
+def do_commit(commit_config, path, artifacts):
     print(f'path {path}')
     assert path[-6:] == '.ipynb'
 
@@ -22,10 +22,14 @@ def do_commit(commit_config, deploy_key, path, artifacts):
     repo_config = commit_config['repository']
     repo_branch = repo_config.get('branch', 'master')
     repo_url = repo_config['url']
+    with open(repo_config['deploy_key'], 'r') as f:
+        repo_deploy_key = f.read()
 
     output_repo_config = commit_config['output_repository']
     output_repo_branch = output_repo_config.get('branch', 'master')
     output_repo_url = output_repo_config['url']
+    with open(output_repo_config['deploy_key'], 'r') as f:
+        output_repo_deploy_key = f.read()
 
     now = datetime.datetime.now(datetime.timezone.utc)
 
@@ -47,6 +51,8 @@ fi
 
     script = f'''
 cd /root
+echo "{repo_deploy_key}" > ~/.ssh/id_rsa
+chmod 400 ~/.ssh/id_rsa
 git clone --recursive -b "{repo_branch}" "{repo_url}" repo
 cd repo
 
@@ -54,6 +60,9 @@ echo "{input_gzip_base64}" | base64 -d | gzip -d > "{path}"
 
 {command} "{path}"
 
+rm ~/.ssh/id_rsa
+echo "{output_repo_deploy_key}" > ~/.ssh/id_rsa
+chmod 400 ~/.ssh/id_rsa
 git clone --recursive -b "{output_repo_branch}" "{output_repo_url}" "{output_repo_dir}"
 
 mkdir "{output_repo_dir}/{commit_path}"
@@ -71,7 +80,6 @@ git push origin "{output_repo_branch}"
     gce_create(
         vm_name=vm_name,
         instance_config=instance_config,
-        deploy_key=deploy_key,
         startup_script=script,
         delete_after_startup=True
     )

@@ -21,7 +21,7 @@ def validate():
 def commit(path, artifacts):
     """run notebook and save outputs like kaggle commit"""
     config = read_config()
-    do_commit(config['commit'], config['deploy_key'], path, artifacts)
+    do_commit(config['commit'], path, artifacts)
 
 @cli.command()
 @click.argument('instance_name')

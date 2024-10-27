@@ -10,25 +10,28 @@
           "properties": {
             "zone": { "type": "string" },
             "accelerator_type": { "type": "string" },
-            "machine_type": { "type": "string" }
+            "machine_type": { "type": "string" },
+            "snapshot": { "type": "string" }
           },
-          "required": ["zone", "machine_type"]
+          "required": ["zone", "machine_type", "snapshot"]
         },
         "repository": {
           "type": "object",
           "properties": {
             "url": { "type": "string", "format": "uri" },
-            "branch": { "type": "string" }
+            "branch": { "type": "string" },
+            "deploy_key": { "type": "string" }
           },
-          "required": ["url"]
+          "required": ["url", "deploy_key"]
         },
         "output_repository": {
           "type": "object",
           "properties": {
             "url": { "type": "string", "format": "uri" },
-            "branch": { "type": "string" }
+            "branch": { "type": "string" },
+            "deploy_key": { "type": "string" }
           },
-          "required": ["url"]
+          "required": ["url", "deploy_key"]
         },
         "command": { "type": "string" }
       },
@@ -36,5 +39,5 @@
     },
     "deploy_key": { "type": "string" }
   },
-  "required": ["commit", "deploy_key"]
+  "required": ["commit"]
 }

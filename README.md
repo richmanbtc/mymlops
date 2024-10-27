@@ -71,13 +71,14 @@ schema is defined in src/mymlops/config_schema.json
 Division of responsibilities between mymlops and each repository
 
 | process              | mymlops | repository |
-|----------------------|--------|------------|
-| start gce instance   | o      |            |
-| setup gce instance   | o      |            |
-| git clone repo       | o      |            |
-| execute notebook     |        | o          |
-| git push output_repo | o      |            |
-| delete gce instance  | o      |            |
+|----------------------|-------|------------|
+| source snapshot      |       | o          |
+| start gce instance   | o     |            |
+| setup gce instance   | o     |            |
+| git clone repo       | o     |            |
+| execute notebook     |       | o          |
+| git push output_repo | o     |            |
+| delete gce instance  | o     |            |
 
 In each repository, the following actions are required:
 
