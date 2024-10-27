@@ -22,7 +22,11 @@ function cleanup {
     ZONE=$(curl metadata.google.internal/computeMetadata/v1/instance/zone -H "Metadata-Flavor: Google" | cut -d/ -f4)
     docker run google/cloud-sdk gcloud compute instances delete $NAME --zone=$ZONE --quiet
 }
-#trap cleanup EXIT
+trap cleanup EXIT
+'''
+
+    gpu_script = '''
+sudo /opt/deeplearning/install-driver.sh
 '''
 
     script = f'''#!/bin/bash
@@ -44,6 +48,8 @@ git config --global user.name "Your Name"
 
 apt-get update
 apt-get install -y docker-compose-plugin
+
+{gpu_script if accelerator_type is not None else ''}
 
 {startup_script}
 '''

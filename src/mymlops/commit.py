@@ -76,7 +76,7 @@ git push origin "{output_repo_branch}"
         delete_after_startup=True
     )
 
-    @retry(tries=60, delay=1)
+    @retry(tries=20, delay=5)
     def logs():
         do_startup_logs(vm_name, zone)
 
