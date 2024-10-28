@@ -39,6 +39,13 @@ def _start_server(commit_config):
                 with open(os.path.join(os.path.dirname(__file__), 'status_server.html'), 'rb') as f:
                     content = f.read()
                 self.wfile.write(content)
+            elif self.path == '/favicon.png':
+                self.send_response(200)
+                self.send_header('Content-type', 'image/png')
+                self.end_headers()
+                with open(os.path.join(os.path.dirname(__file__), 'blake-verdoorn-cssvEZacHvQ-unsplash-resized.png'), 'rb') as f:
+                    content = f.read()
+                self.wfile.write(content)
             elif self.path == '/data.json':
                 self.send_response(200)
                 self.send_header('Content-type', 'text/json')
