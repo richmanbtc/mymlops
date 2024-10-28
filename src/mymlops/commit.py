@@ -9,7 +9,7 @@ from .startup_logs import do_startup_logs
 from .gce_create import gce_create
 
 
-def do_commit(commit_config, path, artifacts):
+def do_commit(commit_config, path, artifacts, notes):
     print(f'path {path}')
     assert path[-6:] == '.ipynb'
 
@@ -42,6 +42,18 @@ def do_commit(commit_config, path, artifacts):
     commit_path = now.strftime('%Y%m%d_%H%M%S')
     commit_message = f'commit {commit_path}'
 
+    metadata = {
+        'commit': commit_path,
+        'notebook': os.path.basename(path),
+        'repository': repo_url,
+        'branch': repo_branch,
+        'artifacts': artifacts,
+        'notes': notes if notes else None,
+        'accelerator': instance_config.get('accelerator'),
+    }
+    metadata_gzip_base64 = base64.b64encode(gzip.compress(
+        json.dumps(metadata, indent=4, sort_keys=True).encode('utf-8'))).decode('ascii')
+
     artifacts_path = f"{os.path.dirname(path)}/artifacts"
     copy_artifacts_script = f'''
 if [ -d "{artifacts_path}" ]; then
@@ -68,6 +80,7 @@ git clone --recursive -b "{output_repo_branch}" "{output_repo_url}" "{output_rep
 mkdir "{output_repo_dir}/{commit_path}"
 cp "{path}" "{output_repo_dir}/{commit_path}"
 {copy_artifacts_script if artifacts else ''}
+echo "{metadata_gzip_base64}" | base64 -d | gzip -d > "{output_repo_dir}/{commit_path}/metadata.json"
 
 (
 cd "{output_repo_dir}"
@@ -77,9 +90,15 @@ git push origin "{output_repo_branch}"
 )
 '''
 
+    gce_metadata = {
+        f'mymlops-{k}': v
+        for k, v in metadata.items()
+    }
+
     gce_create(
         vm_name=vm_name,
         instance_config=instance_config,
+        metadata=gce_metadata,
         startup_script=script,
         delete_after_startup=True
     )

@@ -4,7 +4,7 @@ from .consts import GITHUB_KNOWN_HOSTS
 from .utils import run_redirect
 
 
-def gce_create(vm_name, instance_config, startup_script='', delete_after_startup=False):
+def gce_create(vm_name, instance_config, metadata={}, startup_script='', delete_after_startup=False):
     print(f'gce_create vm_name {vm_name} instance_config {instance_config}')
 
     zone = instance_config['zone']
@@ -48,6 +48,13 @@ apt-get install -y docker-compose-plugin
         with open(script_path, "w") as f:
             f.write(script)
 
+        def to_string(value):
+            if isinstance(value, bool):
+                return "true" if value else "false"
+            return str(value)
+
+        metadata_options = ','.join([f'{k}={to_string(v)}' for k, v in metadata.items() if v is not None])
+
         options = [
             'gcloud',
             'compute',
@@ -55,12 +62,14 @@ apt-get install -y docker-compose-plugin
             'create',
             vm_name,
             f'--metadata-from-file=startup-script={script_path}',
+            f'--metadata={metadata_options}' if metadata else None,
             f'--zone={zone}',
             f'--accelerator=type={accelerator_type},count=1' if accelerator_type is not None else None,
             f'--machine-type={machine_type}' if machine_type is not None else None,
             '--scopes=default,bigquery,compute-rw',
             '--provisioning-model=SPOT',
             f'--create-disk=auto-delete=yes,boot=yes,device-name=mymlops,source-snapshot={snapshot},mode=rw,size=100,type=pd-ssd',
+            '--labels=mymlops=_',
         ]
 
         options = [x for x in options if x is not None]
