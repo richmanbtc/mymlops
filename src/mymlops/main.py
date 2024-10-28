@@ -26,11 +26,13 @@ def commit(path, artifacts, notes):
     do_commit(config['commit'], path, artifacts, notes)
 
 @cli.command()
-def status():
+@click.option('-f', '--format', show_default=True, default='')
+@click.option('-s', '--server', is_flag=True, show_default=True, default=False)
+def status(format, server):
     """show status of commit execution and commit histories\n
 mymlops status | jq -r '.[] | [.status, .commit, .notebook, .notes] | @tsv' | column -t"""
     config = read_config()
-    do_status(config['commit'])
+    do_status(config['commit'], format, server)
 
 @cli.command()
 @click.argument('instance_name')

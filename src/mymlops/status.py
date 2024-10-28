@@ -3,12 +3,65 @@ import re
 import json
 import subprocess
 import logging
+from datetime import datetime, timezone
+from http.server import BaseHTTPRequestHandler, HTTPServer
 from git import Repo
+from tabulate import tabulate
 
 
 logger = logging.getLogger(__name__)
 
-def do_status(commit_config):
+def do_status(commit_config, format, server):
+    if server:
+        _start_server(commit_config)
+        return
+
+    metadata_list = _get_metadata_list(commit_config)
+
+    if format == 'json':
+        print(json.dumps(metadata_list, indent=4, sort_keys=True))
+    else:
+        headers = ['status', 'commit', 'notebook', 'notes']
+        data = [
+            [metadata.get(h) for h in headers]
+            for metadata in metadata_list
+        ]
+        print(tabulate(data, headers, tablefmt="plain"))
+
+
+def _start_server(commit_config):
+    class CustomHandler(BaseHTTPRequestHandler):
+        def do_GET(self):
+            if self.path == '/':
+                self.send_response(200)
+                self.send_header('Content-type', 'text/html')
+                self.end_headers()
+                with open(os.path.join(os.path.dirname(__file__), 'status_server.html'), 'rb') as f:
+                    content = f.read()
+                self.wfile.write(content)
+            elif self.path == '/data.json':
+                self.send_response(200)
+                self.send_header('Content-type', 'text/json')
+                self.end_headers()
+                metadata_list = _get_metadata_list(commit_config)
+                data = {
+                    'commit_config': commit_config,
+                    'metadata_list': metadata_list,
+                }
+                self.wfile.write(json.dumps(data, indent=4, sort_keys=True).encode('utf-8'))
+            else:
+                self.send_response(404)
+                self.end_headers()
+                self.wfile.write(b"404 Not Found")
+
+    host = "0.0.0.0"
+    port = 8000
+    server = HTTPServer((host, port), CustomHandler)
+    print(f"Serving on http://{host}:{port}")
+    server.serve_forever()
+
+
+def _get_metadata_list(commit_config):
     metadata_list = {}
 
     # fetch gce status
@@ -82,7 +135,11 @@ def do_status(commit_config):
         metadata_list[metadata['commit']] = metadata
 
     metadata_list = sorted(metadata_list.values(), key=lambda x: x['commit'])
-    print(json.dumps(metadata_list, indent=4, sort_keys=True))
+
+    for x in metadata_list:
+        x['timestamp'] = _parse_timestamp(x['commit']).isoformat()
+
+    return metadata_list
 
 
 def _notebook_has_error(notebook_path):
@@ -94,3 +151,8 @@ def _notebook_has_error(notebook_path):
             if output['output_type'] == 'error':
                 return True
     return False
+
+def _parse_timestamp(timestamp_str):
+    dt = datetime.strptime(timestamp_str, "%Y%m%d_%H%M%S")
+    # UTCに設定
+    return dt.replace(tzinfo=timezone.utc)

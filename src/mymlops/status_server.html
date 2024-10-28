@@ -1,0 +1,73 @@
+<head>
+    <meta name="referrer" content="no-referrer">
+    <script src="https://unpkg.com/vue@3.5.12/dist/vue.global.js" integrity="sha256-a2aHjMRqXnHW7wquoxnhaOlIoSBFS7xugHgoHPvYYCg=" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.30.1/moment-with-locales.min.js" integrity="sha512-4F1cxYdMiAW98oomSLaygEwmCnIP38pb4Kx70yQYqRwLVCs3DbRumfBq82T08g/4LJ/smbFGFpmeFlQgoDccgg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script></head>
+<body>
+
+<div id="app">
+    <table>
+        <thead>
+        <tr>
+            <th v-for="(header, index) in headers" :key="index">{{ header }}</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr v-for="(item, index) in items" :key="index">
+            <td>{{ item.status_fmt }}</td>
+            <td>{{ item.timestamp_fmt }}</td>
+            <td>{{ item.repository_fmt }}</td>
+            <td><a :href="item.notebook_url">{{ item.notebook }}</a></td>
+            <td>{{ item.notes }}</td>
+            <td>{{ item.accelerator }}</td>
+            <td>{{ item.artifacts_fmt }}</td>
+        </tr>
+        </tbody>
+    </table>
+</div>
+
+<script>
+    const { createApp, ref, onMounted, onBeforeUnmount } = Vue;
+    moment.locale(navigator.language || navigator.userLanguage);
+
+    createApp({
+        setup() {
+            const items = ref([]);
+            const headers = ['status', 'timestamp (local)', 'repository', 'notebook', 'notes', 'accelerator', 'artifacts'];
+            let pollingInterval;
+
+            const fetchData = async () => {
+                try {
+                    const { metadata_list, commit_config: { output_repository } } = await (await fetch("/data.json")).json();
+                    const repoUrl = output_repository.url.replace(/^(git@|https:\/\/)github\.com[:\/](.+?)\/(.+?)(\.git)?$/, "https://github.com/$2/$3");
+                    const branch = output_repository.branch || 'master';
+
+                    items.value = metadata_list.map(row => ({
+                        ...row,
+                        status_fmt: row.status[0].toUpperCase(),
+                        artifacts_fmt: row.artifacts ? 'T' : 'F',
+                        timestamp_fmt: moment(row.timestamp).calendar(),
+                        repository_fmt: row.repository && `${row.repository.split('/').pop().replace('.git', '')}/${row.branch || ''}`,
+                        notebook_url: `${repoUrl}/tree/${branch}/${row.commit}/${row.notebook}`
+                    })).reverse();
+                } catch (error) { console.error("Error fetching data:", error); }
+            };
+
+            const startPolling = () => { fetchData(); pollingInterval = setInterval(fetchData, 10000); };
+            const stopPolling = () => clearInterval(pollingInterval);
+
+            onMounted(() => {
+                startPolling();
+                document.addEventListener("visibilitychange", () => document.visibilityState === "visible" ? startPolling() : stopPolling());
+            });
+
+            onBeforeUnmount(() => {
+                stopPolling();
+                document.removeEventListener("visibilitychange", handleVisibilityChange);
+            });
+
+            return { items, headers };
+        }
+    }).mount('#app');
+</script>
+
+</body>
