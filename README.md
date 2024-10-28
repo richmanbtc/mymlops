@@ -9,6 +9,13 @@ todo
 - commit message
 - gcp project from config
 
+## personal memo
+
+When working on ML tasks:
+
+1. Open `mymlops status --server` in a browser and keep it next to the Jupyter tab.
+2. Use `mymlops commit path/to/notebooks -n "notes"` to make quick commits.
+
 ## install
 
 ```bash
