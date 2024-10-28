@@ -20,8 +20,8 @@
             <td>{{ item.repository_fmt }}</td>
             <td><a :href="item.notebook_url">{{ item.notebook }}</a></td>
             <td>{{ item.notes }}</td>
-            <td>{{ item.accelerator }}</td>
             <td :style="item.artifacts_style">{{ item.artifacts_fmt }}</td>
+            <td>{{ item.accelerator }}</td>
         </tr>
         </tbody>
     </table>
@@ -34,7 +34,7 @@
     createApp({
         setup() {
             const items = ref([]);
-            const headers = ['status', 'timestamp (local)', 'repository', 'notebook', 'notes', 'accelerator', 'artifacts'];
+            const headers = ['status', 'timestamp (local)', 'repository', 'notebook', 'notes', 'artifacts', 'accelerator'];
             let pollingInterval;
 
             const fetchData = async () => {
