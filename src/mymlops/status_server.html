@@ -15,13 +15,13 @@
         </thead>
         <tbody>
         <tr v-for="(item, index) in items" :key="index">
-            <td>{{ item.status_fmt }}</td>
+            <td :style="item.status_style">{{ item.status_fmt }}</td>
             <td>{{ item.timestamp_fmt }}</td>
             <td>{{ item.repository_fmt }}</td>
             <td><a :href="item.notebook_url">{{ item.notebook }}</a></td>
             <td>{{ item.notes }}</td>
             <td>{{ item.accelerator }}</td>
-            <td>{{ item.artifacts_fmt }}</td>
+            <td :style="item.artifacts_style">{{ item.artifacts_fmt }}</td>
         </tr>
         </tbody>
     </table>
@@ -49,7 +49,17 @@
                         artifacts_fmt: row.artifacts ? 'T' : 'F',
                         timestamp_fmt: moment(row.timestamp).calendar(),
                         repository_fmt: row.repository && `${row.repository.split('/').pop().replace('.git', '')}/${row.branch || ''}`,
-                        notebook_url: `${repoUrl}/tree/${branch}/${row.commit}/${row.notebook}`
+                        notebook_url: `${repoUrl}/tree/${branch}/${row.commit}/${row.notebook}`,
+                        status_style: {
+                            color: {
+                                'p': '#3498db',
+                                's': '#2ecc71',
+                                'f': '#e74c3c',
+                            }[row.status[0]]
+                        },
+                        artifacts_style: {
+                            color: row.artifacts ? '#2ecc71' : '#e74c3c',
+                        },
                     })).reverse();
                 } catch (error) { console.error("Error fetching data:", error); }
             };
