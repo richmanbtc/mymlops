@@ -3,6 +3,8 @@ import re
 import json
 import subprocess
 import logging
+import shutil
+import tempfile
 from datetime import datetime, timezone
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from git import Repo
@@ -104,6 +106,11 @@ def _get_metadata_list(commit_config):
     try:
         repo = Repo(work_dir)
     except:
+        if os.path.exists(work_dir):
+            temp_dir = tempfile.mkdtemp(prefix='mymlops_removed_', dir='/tmp')
+            shutil.move(work_dir, temp_dir)
+            logger.warning(f"Moved the old, corrupted directory to {temp_dir}.")
+
         os.makedirs(os.path.dirname(work_dir), exist_ok=True)
         repo_url = commit_config['output_repository']['url']
         Repo.clone_from(
