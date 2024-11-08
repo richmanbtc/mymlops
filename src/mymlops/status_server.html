@@ -64,8 +64,17 @@
                 } catch (error) { console.error("Error fetching data:", error); }
             };
 
-            const startPolling = () => { fetchData(); pollingInterval = setInterval(fetchData, 10000); };
-            const stopPolling = () => clearInterval(pollingInterval);
+            const startPolling = () => {
+                fetchData();
+                stopPolling();
+                pollingInterval = setInterval(fetchData, 10000);
+            };
+            const stopPolling = () => {
+                if (pollingInterval) {
+                    clearInterval(pollingInterval);
+                    pollingInterval = void 0
+                }
+            }
 
             onMounted(() => {
                 startPolling();

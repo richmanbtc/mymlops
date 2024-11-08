@@ -4,6 +4,10 @@
 
 todo
 
+- finished time (need to know if I need work)
+- detailed status (processing, stopped, succeeded, failed)
+- push from local before create gce
+- interval push notebook during papermill process
 - start
 - idle shutdown
 - commit message
