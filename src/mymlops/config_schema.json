@@ -9,7 +9,7 @@
           "type": "object",
           "properties": {
             "zone": { "type": "string" },
-            "accelerator_type": { "type": "string" },
+            "accelerator": { "type": "string" },
             "machine_type": { "type": "string" },
             "snapshot": { "type": "string" }
           },

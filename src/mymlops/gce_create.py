@@ -8,7 +8,7 @@ def gce_create(vm_name, instance_config, metadata={}, startup_script='', delete_
     print(f'gce_create vm_name {vm_name} instance_config {instance_config}')
 
     zone = instance_config['zone']
-    accelerator_type = instance_config.get('accelerator_type')
+    accelerator = instance_config.get('accelerator')
     machine_type = instance_config.get('machine_type')
     snapshot = instance_config['snapshot']
 
@@ -61,7 +61,7 @@ git config --global user.name "Your Name"
             f'--metadata-from-file=startup-script={script_path}',
             f'--metadata={metadata_options}' if metadata else None,
             f'--zone={zone}',
-            f'--accelerator=type={accelerator_type},count=1' if accelerator_type is not None else None,
+            f'--accelerator=type={accelerator},count=1' if accelerator is not None else None,
             f'--machine-type={machine_type}' if machine_type is not None else None,
             '--scopes=default,bigquery,compute-rw',
             '--provisioning-model=SPOT',
