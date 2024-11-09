@@ -37,9 +37,6 @@ export GIT_SSH_COMMAND="ssh -o "UserKnownHostsFile=/root/.ssh/known_hosts" -i ~/
 git config --global user.email "you@example.com"
 git config --global user.name "Your Name"
 
-apt-get update
-apt-get install -y docker-compose-plugin
-
 {startup_script}
 '''
 
