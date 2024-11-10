@@ -7,11 +7,9 @@
       "properties": {
         "links": {
           "type": "object",
-          "properties": {
-            "local_jupyter": { "type": "string", "format": "uri" }
-          },
-          "required": ["local_jupyter"],
-          "additionalProperties": false
+          "additionalProperties": {
+            "type": "string"
+          }
         },
         "tunnel": {
           "type": "object",
