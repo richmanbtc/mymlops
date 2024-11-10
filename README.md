@@ -42,6 +42,13 @@ https://github.com/richmanbtc/mymlops-testrepo
 - Q: An unexecuted output.ipynb has been uploaded.
 - A: Please check if the Docker running the notebook is mounting the directory that includes output.ipynb.
 
+torch.cuda.is_available() is False
+
+The cause is unknown. After trying various things, I ran docker compose stop and docker compose up -d, and then the same code returned True. My hypothesis is that either something running in the background was updated and allowed it to work, or it doesn’t work if I run docker compose up -d immediately after startup.
+
+solution:
+check torch.cuda.is_available() in jupyter container startup script
+
 ## command completion
 
 add this to ~/.bash_profile
