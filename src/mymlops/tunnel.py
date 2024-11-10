@@ -57,7 +57,7 @@ class Tunnel:
                 except Exception as err:
                     logger.error(f'ssh tunnel failed {err}')
 
-                time.sleep(1)
+                time.sleep(10)
 
         self._thread = threading.Thread(target=run)
         self._thread.start()

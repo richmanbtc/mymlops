@@ -1,3 +1,5 @@
+import base64
+import gzip
 import os
 import tempfile
 from .consts import GITHUB_KNOWN_HOSTS
@@ -12,18 +14,17 @@ def gce_create(vm_name, zone, machine_type, accelerator, snapshot, label,
         f'snapshot {snapshot} label {label}'
     )
 
-    # https://qiita.com/relu/items/6a3bb240084948f4a578
-    cleanup_script = '''
-function cleanup {
-    NAME=$(curl metadata.google.internal/computeMetadata/v1/instance/name -H "Metadata-Flavor: Google")
-    ZONE=$(curl metadata.google.internal/computeMetadata/v1/instance/zone -H "Metadata-Flavor: Google" | cut -d/ -f4)
-    docker run google/cloud-sdk gcloud compute instances delete $NAME --zone=$ZONE --quiet
-}
-trap cleanup EXIT
-'''
+    with open(os.path.join(os.path.dirname(__file__), 'idle_shutdown.sh'), 'r') as f:
+        idle_shutdown_script = f.read()
+    idle_shutdown_script_gzip_base64 = base64.b64encode(gzip.compress(
+        idle_shutdown_script.encode('utf-8'))).decode('ascii')
 
     script = f'''#!/bin/bash
 set -ex
+
+echo "{idle_shutdown_script_gzip_base64}" | base64 -d | gzip -d > /usr/local/bin/idle_shutdown.sh
+chmod +x /usr/local/bin/idle_shutdown.sh
+/usr/local/bin/idle_shutdown.sh &
 
 STARTUP_FLAG_FILE="/etc/first_boot_completed"
 if [ -f "$STARTUP_FLAG_FILE" ]; then
@@ -32,7 +33,7 @@ if [ -f "$STARTUP_FLAG_FILE" ]; then
 fi
 echo "Running startup script for the first time..."
 
-{cleanup_script if delete_after_startup else ''}
+{_cleanup_script if delete_after_startup else ''}
 
 export HOME=/root
 
@@ -83,3 +84,14 @@ echo "Startup script execution completed."
 
         options = [x for x in options if x is not None]
         run_redirect(options)
+
+
+# https://qiita.com/relu/items/6a3bb240084948f4a578
+_cleanup_script = '''
+function cleanup {
+    NAME=$(curl metadata.google.internal/computeMetadata/v1/instance/name -H "Metadata-Flavor: Google")
+    ZONE=$(curl metadata.google.internal/computeMetadata/v1/instance/zone -H "Metadata-Flavor: Google" | cut -d/ -f4)
+    docker run google/cloud-sdk gcloud compute instances delete $NAME --zone=$ZONE --quiet
+}
+trap cleanup EXIT
+'''
