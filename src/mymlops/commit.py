@@ -3,19 +3,34 @@ import datetime
 import base64
 import gzip
 import json
+import subprocess
 from retry import retry
 from .utils import remove_notebook_output
 from .startup_logs import do_startup_logs
 from .gce_create import gce_create
-from .gce_zones import gce_select_zone
+from .gce_zones import gce_select_zone, gce_get_zone
 
 
-def do_commit(commit_config, path, artifacts, notes):
+def do_commit(commit_config, path, artifacts, notes, instance):
     print(f'path {path}')
     assert path[-6:] == '.ipynb'
 
-    with open(path, 'r') as f:
-        input = json.load(f)
+    if instance:
+        zone = gce_get_zone(instance)
+        options = [
+            'gcloud',
+            'compute',
+            'ssh',
+            f'root@{instance}',
+            f'--zone={zone}',
+            f'--command=cat /root/repo/{path}',
+        ]
+        input = subprocess.check_output(options)
+    else:
+        with open(path, 'r') as f:
+            input = f.read()
+
+    input = json.loads(input)
     input = remove_notebook_output(input)
     input_gzip_base64 = base64.b64encode(gzip.compress(
         json.dumps(input).encode('utf-8'))).decode('ascii')

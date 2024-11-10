@@ -21,21 +21,21 @@ def validate():
     print('ok')
 
 @cli.command()
-@click.argument('path', type=click.Path(exists=True))
+@click.argument('path', type=click.Path(exists=False))
 @click.option('-a', '--artifacts', is_flag=True, show_default=True, default=False)
 @click.option('-n', '--notes', show_default=True, default='')
-def commit(path, artifacts, notes):
+@click.option('-i', '--instance', show_default=True, default='')
+def commit(path, artifacts, notes, instance):
     """run notebook and save outputs like kaggle commit"""
     config = read_config()
-    do_commit(config['commit'], path, artifacts, notes)
+    do_commit(config['commit'], path, artifacts, notes, instance)
 
 
 @cli.command()
 @click.argument('instance_name')
-@click.argument('zone')
-def startup_logs(instance_name, zone):
+def startup_logs(instance_name):
     """tail startup script logs of compute engine instance"""
-    do_startup_logs(instance_name, zone)
+    do_startup_logs(instance_name)
 
 @cli.command()
 def start():

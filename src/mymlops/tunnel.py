@@ -3,6 +3,7 @@ import logging
 import subprocess
 import threading
 import time
+from .gce_zones import shorten_zone
 
 
 logger = logging.getLogger(__name__)
@@ -26,7 +27,7 @@ class TunnelManager:
         tunnels = []
         for inst in instances:
             for remote_port in tunnel_config['remote_ports']:
-                tunnels.append(Tunnel(inst['name'], inst['zone'].split("/")[-1], local_port, remote_port))
+                tunnels.append(Tunnel(inst['name'], shorten_zone(inst['zone']), local_port, remote_port))
                 local_port += 1
 
         self.tunnels = tunnels

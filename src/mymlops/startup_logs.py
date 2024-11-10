@@ -1,6 +1,8 @@
 from .utils import run_redirect
+from .gce_zones import gce_get_zone
 
-def do_startup_logs(instance_name, zone):
+def do_startup_logs(instance_name):
+    zone = gce_get_zone(instance_name)
     options = [
         'gcloud',
         'compute',
