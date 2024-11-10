@@ -2,7 +2,6 @@ import click
 import logging
 from .config import read_config
 from .commit import do_commit
-from .status import do_status
 from .start import do_start
 from .startup_logs import do_startup_logs
 from .dashboard import do_dashboard
@@ -30,14 +29,6 @@ def commit(path, artifacts, notes):
     config = read_config()
     do_commit(config['commit'], path, artifacts, notes)
 
-@cli.command()
-@click.option('-f', '--format', show_default=True, default='')
-@click.option('-s', '--server', is_flag=True, show_default=True, default=False)
-def status(format, server):
-    """show status of commit execution and commit histories\n
-mymlops status | jq -r '.[] | [.status, .commit, .notebook, .notes] | @tsv' | column -t"""
-    config = read_config()
-    do_status(config['commit'], format, server)
 
 @cli.command()
 @click.argument('instance_name')

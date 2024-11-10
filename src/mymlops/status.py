@@ -8,27 +8,9 @@ import tempfile
 from datetime import datetime, timezone
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from git import Repo
-from tabulate import tabulate
 
 
 logger = logging.getLogger(__name__)
-
-def do_status(commit_config, format, server):
-    if server:
-        _start_server(commit_config)
-        return
-
-    metadata_list = _get_metadata_list(commit_config)
-
-    if format == 'json':
-        print(json.dumps(metadata_list, indent=4, sort_keys=True))
-    else:
-        headers = ['status', 'commit', 'notebook', 'notes']
-        data = [
-            [metadata.get(h) for h in headers]
-            for metadata in metadata_list
-        ]
-        print(tabulate(data, headers, tablefmt="plain"))
 
 
 def _start_server(commit_config):
