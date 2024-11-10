@@ -1,6 +1,7 @@
 import os
 import json
 import logging
+from itertools import groupby
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from .status import _get_metadata_list
 from .tunnel import TunnelManager
@@ -29,17 +30,27 @@ def do_dashboard(config):
                 self.send_header('Content-type', 'text/json')
                 self.end_headers()
                 metadata_list = _get_metadata_list(config['commit'])
-                tunnel_list = [
+
+                grouped_tunnels = {
+                    name: list(tunnels)
+                    for name, tunnels in groupby(tunnel_manager.tunnels, key=lambda t: t.name)
+                }
+                start_list = [
                     {
-                        a: getattr(t, a)
-                        for a in ['name', 'zone', 'local_port', 'remote_port']
+                        'name': name,
+                        'zone': tunnels[0].zone,
+                        'tunnels': [
+                            { 'local_port': t.local_port, 'remote_port': t.remote_port }
+                            for t in tunnels
+                        ],
                     }
-                    for t in tunnel_manager.tunnels
+                    for name, tunnels in grouped_tunnels.items()
                 ]
+
                 data = {
                     'config': config,
                     'metadata_list': metadata_list,
-                    'tunnel_list': tunnel_list,
+                    'start_list': start_list,
                 }
                 self.wfile.write(json.dumps(data, indent=4, sort_keys=True).encode('utf-8'))
             else:

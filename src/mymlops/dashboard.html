@@ -3,28 +3,47 @@
     <meta name="referrer" content="no-referrer">
     <link rel="icon" type="image/png" href="/favicon.png" />
     <script src="https://unpkg.com/vue@3.5.12/dist/vue.global.js" integrity="sha256-a2aHjMRqXnHW7wquoxnhaOlIoSBFS7xugHgoHPvYYCg=" crossorigin="anonymous"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.30.1/moment-with-locales.min.js" integrity="sha512-4F1cxYdMiAW98oomSLaygEwmCnIP38pb4Kx70yQYqRwLVCs3DbRumfBq82T08g/4LJ/smbFGFpmeFlQgoDccgg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script></head>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.30.1/moment-with-locales.min.js" integrity="sha512-4F1cxYdMiAW98oomSLaygEwmCnIP38pb4Kx70yQYqRwLVCs3DbRumfBq82T08g/4LJ/smbFGFpmeFlQgoDccgg==" crossorigin="anonymous"></script>
+</head>
 <body>
 <div id="app">
-    <div v-if="dashboardLinks && Object.keys(dashboardLinks).length" style="margin-bottom: 10px;">
+    <div style="margin-bottom: 10px;">
         <span v-for="(url, name) in dashboardLinks" :key="name" style="margin-right: 10px;">
             <a :href="url" target="_blank">{{ name }}</a>
         </span>
     </div>
 
-    <table v-if="tunnelList && tunnelList.length" style="margin-bottom: 10px;">
+    <table style="margin-bottom: 10px;">
         <thead>
         <tr>
             <th>Name</th>
             <th>Zone</th>
-            <th>Link</th>
+            <th v-for="(tunnel, index) in startList[0]?.tunnels" :key="index">
+                {{ tunnel.remote_port }}
+            </th>
+            <th>ssh command</th>
+            <th>log command</th>
         </tr>
         </thead>
         <tbody>
-        <tr v-for="(tunnel, index) in tunnelList" :key="index">
-            <td>{{ tunnel.name }}</td>
-            <td>{{ tunnel.zone }}</td>
-            <td><a :href="`http://localhost:${tunnel.local_port}`">{{ tunnel.local_port }} -> {{ tunnel.remote_port }}</a></td>
+        <tr v-for="(start, index) in startList" :key="index">
+            <td>{{ start.name }}</td>
+            <td>{{ start.zone }}</td>
+            <td v-for="tunnel in start.tunnels" :key="tunnel.remote_port">
+                <a :href="`http://localhost:${tunnel.local_port}`">{{ tunnel.local_port }}</a>
+            </td>
+            <td>
+                {{ generateSshCommand(start.name, start.zone) }}
+                <button @click="copyToClipboard(generateSshCommand(start.name, start.zone))" style="margin-left: 10px;">
+                    Copy
+                </button>
+            </td>
+            <td>
+                {{ generateLogCommand(start.name, start.zone) }}
+                <button @click="copyToClipboard(generateLogCommand(start.name, start.zone))" style="margin-left: 10px;">
+                    Copy
+                </button>
+            </td>
         </tr>
         </tbody>
     </table>
@@ -58,14 +77,14 @@
             const items = ref([]);
             const headers = ['status', 'timestamp (local)', 'repository', 'notebook', 'notes', 'artifacts', 'accelerator'];
             const dashboardLinks = ref({});
-            const tunnelList = ref([]);
+            const startList = ref([]);
             let pollingInterval;
 
             const fetchData = async () => {
                 try {
-                    const { metadata_list, config: { commit: { output_repository }, dashboard: { links } }, tunnel_list } = await (await fetch("/data.json")).json();
+                    const { metadata_list, config: { commit: { output_repository }, dashboard: { links } }, start_list } = await (await fetch("/data.json")).json();
                     dashboardLinks.value = links;
-                    tunnelList.value = tunnel_list;
+                    startList.value = start_list;
                     const repoUrl = output_repository.url.replace(/^(git@|https:\/\/)github\.com[:\/](.+?)\/(.+?)(\.git)?$/, "https://github.com/$2/$3");
                     const branch = output_repository.branch || 'master';
 
@@ -98,9 +117,25 @@
             const stopPolling = () => {
                 if (pollingInterval) {
                     clearInterval(pollingInterval);
-                    pollingInterval = void 0
+                    pollingInterval = void 0;
                 }
-            }
+            };
+
+            const generateSshCommand = (name, zone) => {
+                return `gcloud compute ssh root@${name} --zone=${zone} -- 'cd /root/repo && exec bash'`;
+            };
+
+            const generateLogCommand = (name, zone) => {
+                return `gcloud compute ssh ${name} --zone=${zone} --command='sudo journalctl -n 1000 -f -u google-startup-scripts.service' -- -o ServerAliveInterval=1`;
+            };
+
+            const copyToClipboard = (text) => {
+                navigator.clipboard.writeText(text).then(() => {
+                    console.log('Copied to clipboard');
+                }).catch(err => {
+                    console.error('Failed to copy: ', err);
+                });
+            };
 
             onMounted(() => {
                 startPolling();
@@ -112,10 +147,9 @@
                 document.removeEventListener("visibilitychange", handleVisibilityChange);
             });
 
-            return { items, headers, dashboardLinks, tunnelList };
+            return { items, headers, dashboardLinks, startList, copyToClipboard, generateSshCommand, generateLogCommand };
         }
     }).mount('#app');
 </script>
 
 </body>
-
