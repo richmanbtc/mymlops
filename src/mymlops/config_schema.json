@@ -2,6 +2,34 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "additionalProperties": false,
   "properties": {
+    "dashboard": {
+      "type": "object",
+      "properties": {
+        "links": {
+          "type": "object",
+          "properties": {
+            "local_jupyter": { "type": "string", "format": "uri" }
+          },
+          "required": ["local_jupyter"],
+          "additionalProperties": false
+        },
+        "tunnel": {
+          "type": "object",
+          "properties": {
+            "local_port_min": { "type": "integer" },
+            "remote_ports": {
+              "type": "array",
+              "items": { "type": "integer" },
+              "minItems": 1
+            }
+          },
+          "required": ["local_port_min", "remote_ports"],
+          "additionalProperties": false
+        }
+      },
+      "required": ["links", "tunnel"],
+      "additionalProperties": false
+    },
     "commit": {
       "additionalProperties": false,
       "properties": {

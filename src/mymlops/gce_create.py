@@ -4,10 +4,13 @@ from .consts import GITHUB_KNOWN_HOSTS
 from .utils import run_redirect
 
 
-def gce_create(vm_name, zone, machine_type, accelerator, snapshot,
+def gce_create(vm_name, zone, machine_type, accelerator, snapshot, label,
                metadata={}, startup_script='', delete_after_startup=False):
-    print(f'gce_create vm_name {vm_name} zone {zone} '
-          f'machine_type {machine_type} accelerator {accelerator} snapshot {snapshot}')
+    print(
+        f'gce_create vm_name {vm_name} zone {zone} '
+        f'machine_type {machine_type} accelerator {accelerator} '
+        f'snapshot {snapshot} label {label}'
+    )
 
     # https://qiita.com/relu/items/6a3bb240084948f4a578
     cleanup_script = '''
@@ -63,7 +66,7 @@ git config --global user.name "Your Name"
             '--scopes=default,bigquery,compute-rw',
             '--provisioning-model=SPOT',
             f'--create-disk=auto-delete=yes,boot=yes,device-name=mymlops,source-snapshot={snapshot},mode=rw,size=100,type=pd-ssd',
-            '--labels=mymlops=_',
+            f'--labels=mymlops={label}',
         ]
 
         options = [x for x in options if x is not None]

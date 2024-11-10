@@ -79,7 +79,7 @@ def _get_metadata_list(commit_config):
         'compute',
         'instances',
         'list',
-        '--filter=labels.mymlops:*',
+        '--filter=labels.mymlops:commit',
         '--format=json',
     ]
     res = subprocess.check_output(options)

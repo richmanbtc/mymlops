@@ -1,6 +1,6 @@
-## current status
+A MLOps tool built for my own needs.
 
-- only commit command is implemented
+## current status
 
 todo
 
@@ -120,3 +120,9 @@ Since papermill's behavior is more convenient, it is recommended to use papermil
 ```bash
 gcloud compute accelerator-types list --format="table(zone, name, description)" | sort
 ```
+
+### Design Guideline
+
+- Build what I’ll use.
+- Don’t build what I won’t.
+- Remove anything I’ve built but don’t use. 

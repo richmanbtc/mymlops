@@ -103,6 +103,7 @@ git push origin "{output_repo_branch}"
         accelerator=instance_config.get('accelerator'),
         machine_type=instance_config.get('machine_type'),
         snapshot=instance_config['snapshot'],
+        label='commit',
         metadata=gce_metadata,
         startup_script=script,
         delete_after_startup=True

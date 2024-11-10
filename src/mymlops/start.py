@@ -37,5 +37,6 @@ cd repo
         accelerator=instance_config.get('accelerator'),
         machine_type=instance_config.get('machine_type'),
         snapshot=instance_config['snapshot'],
+        label='start',
         startup_script=script,
     )

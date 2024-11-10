@@ -1,9 +1,14 @@
 import click
+import logging
 from .config import read_config
 from .commit import do_commit
 from .status import do_status
 from .start import do_start
 from .startup_logs import do_startup_logs
+from .dashboard import do_dashboard
+
+
+logging.basicConfig(level=logging.INFO)
 
 
 @click.group()
@@ -46,6 +51,13 @@ def start():
     """start compute engine instance and setup"""
     config = read_config()
     do_start(config['start'])
+
+@cli.command()
+def dashboard():
+    """"""
+    config = read_config()
+    do_dashboard(config)
+
 
 if __name__ == '__main__':
     cli()
