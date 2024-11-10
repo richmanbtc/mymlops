@@ -7,6 +7,7 @@ from retry import retry
 from .utils import remove_notebook_output
 from .startup_logs import do_startup_logs
 from .gce_create import gce_create
+from .gce_zones import gce_select_zone
 
 
 def do_commit(commit_config, path, artifacts, notes):
@@ -35,7 +36,8 @@ def do_commit(commit_config, path, artifacts, notes):
 
     vm_name = 'mymlops-' + now.strftime('%Y%m%d-%H%M%S')
     instance_config = commit_config['instance']
-    zone = instance_config['zone']
+    zones = instance_config['zones']
+    zone = gce_select_zone(zones)
 
     command = commit_config['command']
     output_repo_dir = '/root/output_repo'
@@ -97,7 +99,10 @@ git push origin "{output_repo_branch}"
 
     gce_create(
         vm_name=vm_name,
-        instance_config=instance_config,
+        zone=zone,
+        accelerator=instance_config.get('accelerator'),
+        machine_type=instance_config.get('machine_type'),
+        snapshot=instance_config['snapshot'],
         metadata=gce_metadata,
         startup_script=script,
         delete_after_startup=True

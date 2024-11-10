@@ -42,12 +42,10 @@ def startup_logs(instance_name, zone):
     do_startup_logs(instance_name, zone)
 
 @cli.command()
-@click.argument('config_name')
-@click.option('-r', '--recreate', is_flag=True, show_default=True, default=False)
-def start(config_name, recreate):
-    """run notebook and save outputs like kaggle commit"""
+def start():
+    """start compute engine instance and setup"""
     config = read_config()
-    do_start(config, config_name, recreate)
+    do_start(config['start'])
 
 if __name__ == '__main__':
     cli()

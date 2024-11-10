@@ -1,43 +1,149 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "type": "object",
+  "additionalProperties": false,
   "properties": {
     "commit": {
-      "type": "object",
+      "additionalProperties": false,
       "properties": {
-        "instance": {
-          "type": "object",
-          "properties": {
-            "zone": { "type": "string" },
-            "accelerator": { "type": "string" },
-            "machine_type": { "type": "string" },
-            "snapshot": { "type": "string" }
-          },
-          "required": ["zone", "machine_type", "snapshot"]
+        "command": {
+          "type": "string"
         },
-        "repository": {
-          "type": "object",
+        "instance": {
+          "additionalProperties": false,
           "properties": {
-            "url": { "type": "string", "format": "uri" },
-            "branch": { "type": "string" },
-            "deploy_key": { "type": "string" }
+            "accelerator": {
+              "type": "string"
+            },
+            "machine_type": {
+              "type": "string"
+            },
+            "snapshot": {
+              "type": "string"
+            },
+            "zones": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            }
           },
-          "required": ["url", "deploy_key"]
+          "required": [
+            "zones",
+            "machine_type",
+            "snapshot"
+          ],
+          "type": "object"
         },
         "output_repository": {
-          "type": "object",
+          "additionalProperties": false,
           "properties": {
-            "url": { "type": "string", "format": "uri" },
-            "branch": { "type": "string" },
-            "deploy_key": { "type": "string" }
+            "branch": {
+              "type": "string"
+            },
+            "deploy_key": {
+              "type": "string"
+            },
+            "url": {
+              "format": "uri",
+              "type": "string"
+            }
           },
-          "required": ["url", "deploy_key"]
+          "required": [
+            "url",
+            "deploy_key"
+          ],
+          "type": "object"
         },
-        "command": { "type": "string" }
+        "repository": {
+          "additionalProperties": false,
+          "properties": {
+            "branch": {
+              "type": "string"
+            },
+            "deploy_key": {
+              "type": "string"
+            },
+            "url": {
+              "format": "uri",
+              "type": "string"
+            }
+          },
+          "required": [
+            "url",
+            "deploy_key"
+          ],
+          "type": "object"
+        }
       },
-      "required": ["instance", "repository", "output_repository", "command"]
+      "required": [
+        "instance",
+        "repository",
+        "output_repository",
+        "command"
+      ],
+      "type": "object"
     },
-    "deploy_key": { "type": "string" }
+    "start": {
+      "additionalProperties": false,
+      "properties": {
+        "command": {
+          "type": "string"
+        },
+        "instance": {
+          "additionalProperties": false,
+          "properties": {
+            "accelerator": {
+              "type": "string"
+            },
+            "machine_type": {
+              "type": "string"
+            },
+            "snapshot": {
+              "type": "string"
+            },
+            "zones": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            }
+          },
+          "required": [
+            "zones",
+            "machine_type",
+            "snapshot"
+          ],
+          "type": "object"
+        },
+        "repository": {
+          "additionalProperties": false,
+          "properties": {
+            "branch": {
+              "type": "string"
+            },
+            "deploy_key": {
+              "type": "string"
+            },
+            "url": {
+              "format": "uri",
+              "type": "string"
+            }
+          },
+          "required": [
+            "url",
+            "deploy_key"
+          ],
+          "type": "object"
+        }
+      },
+      "required": [
+        "instance",
+        "repository",
+        "command"
+      ],
+      "type": "object"
+    }
   },
-  "required": ["commit"]
+  "required": [],
+  "type": "object"
 }

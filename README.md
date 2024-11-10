@@ -98,9 +98,15 @@ In each repository, the following actions are required:
 
 ### start
 
-- create or start compute engine instance
-- start jupyter (startup script)
-- ssh tunnel
+- create compute engine instance
+- git clone your repository
+- execute start command defined in your repository
+
+out of scopes
+
+- existence check (creates a new one if already exists)
+- deletion (manual deletion on gcp)
+- recreation (delete manually on gcp, then start)
 
 ### papermill vs nbconvert
 
@@ -108,3 +114,9 @@ By default, nbconvert does not update the ipynb file when an error occurs.
 However, when you use the --allow-error option, it updates the ipynb file and does not stop at the first error.
 On the other hand, papermill stops when an error occurs and updates the ipynb file with execution results up to the error point.
 Since papermill's behavior is more convenient, it is recommended to use papermill.
+
+### gpu list
+
+```bash
+gcloud compute accelerator-types list --format="table(zone, name, description)" | sort
+```

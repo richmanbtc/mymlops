@@ -4,13 +4,10 @@ from .consts import GITHUB_KNOWN_HOSTS
 from .utils import run_redirect
 
 
-def gce_create(vm_name, instance_config, metadata={}, startup_script='', delete_after_startup=False):
-    print(f'gce_create vm_name {vm_name} instance_config {instance_config}')
-
-    zone = instance_config['zone']
-    accelerator = instance_config.get('accelerator')
-    machine_type = instance_config.get('machine_type')
-    snapshot = instance_config['snapshot']
+def gce_create(vm_name, zone, machine_type, accelerator, snapshot,
+               metadata={}, startup_script='', delete_after_startup=False):
+    print(f'gce_create vm_name {vm_name} zone {zone} '
+          f'machine_type {machine_type} accelerator {accelerator} snapshot {snapshot}')
 
     # https://qiita.com/relu/items/6a3bb240084948f4a578
     cleanup_script = '''

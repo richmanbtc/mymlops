@@ -1,104 +1,41 @@
-import subprocess
-import yaml
-import time
+import datetime
 from .gce_create import gce_create
-from .utils import run_redirect
-
-def do_start(config, config_name, recreate):
-    print(f'do_start config_name {config_name}')
-    vm_name = 'mymlops-' + config_name
-
-    start_config = config['starts'][config_name]
-    instance_type_config = config['instance_types'][start_config['instance_type']]
-    zone = instance_type_config['zone']
-    ports = start_config['ports']
-
-    if recreate:
-        raise Exception('not implemented')
-
-    desc = _describe(vm_name, zone)
-    if desc is None:
-        _create(config, config_name, vm_name)
-    elif desc['status'] == 'TERMINATED':
-        _start(vm_name, zone)
-
-    for _ in range(10):
-        desc = _describe(vm_name, zone)
-        if desc is not None and desc['status'] == 'RUNNING':
-            break
-        time.sleep(1)
-
-    proxy_command = [
-        'gcloud',
-        'compute',
-        'ssh',
-        vm_name,
-        f'--zone={zone}',
-        '--',
-        '-N',
-    ]
-    for p in ports:
-        pair = p.split(':')
-        proxy_command += [
-            '-L', f'{pair[0]}:localhost:{pair[1]}',
-        ]
-    print(proxy_command)
-    run_redirect(proxy_command)
+from .gce_zones import gce_select_zone
 
 
-def _delete(vm_name, zone):
-    print(subprocess.check_output([
-        'gcloud',
-        'compute',
-        'instances',
-        'start',
-        vm_name,
-        f'--zone={zone}'
-    ]))
+def do_start(start_config):
+    print(f'do_start')
 
-def _start(vm_name, zone):
-    print(subprocess.check_output([
-        'gcloud',
-        'compute',
-        'instances',
-        'start',
-        vm_name,
-        f'--zone={zone}'
-    ]))
+    repo_config = start_config['repository']
+    repo_branch = repo_config.get('branch', 'master')
+    repo_url = repo_config['url']
+    with open(repo_config['deploy_key'], 'r') as f:
+        repo_deploy_key = f.read()
 
-def _describe(vm_name, zone):
-    try:
-        yaml_str = subprocess.check_output([
-            'gcloud',
-            'compute',
-            'instances',
-            'describe',
-            vm_name,
-            f'--zone={zone}'
-        ])
-    except Exception as e:
-        print(e)
-        return None
+    now = datetime.datetime.now(datetime.timezone.utc)
 
-    desc = yaml.safe_load(yaml_str)
-    return desc
-
-def _create(config, config_name, vm_name):
-    print('_create')
-
-    start_config = config['starts'][config_name]
-    instance_type_config = config['instance_types'][start_config['instance_type']]
+    vm_name = 'mymlops-' + now.strftime('%Y%m%d-%H%M%S')
+    instance_config = start_config['instance']
+    zones = instance_config['zones']
+    zone = gce_select_zone(zones)
 
     command = start_config['command']
 
     script = f'''
+cd /root
+echo "{repo_deploy_key}" > ~/.ssh/id_rsa
+chmod 400 ~/.ssh/id_rsa
+git clone --recursive -b "{repo_branch}" "{repo_url}" repo
+cd repo
+
 {command}
 '''
 
     gce_create(
-        config=config,
         vm_name=vm_name,
-        instance_type=start_config['instance_type'],
+        zone=zone,
+        accelerator=instance_config.get('accelerator'),
+        machine_type=instance_config.get('machine_type'),
+        snapshot=instance_config['snapshot'],
         startup_script=script,
-        delete_after_startup=False
     )
