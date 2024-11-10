@@ -25,6 +25,13 @@ trap cleanup EXIT
     script = f'''#!/bin/bash
 set -ex
 
+STARTUP_FLAG_FILE="/etc/first_boot_completed"
+if [ -f "$STARTUP_FLAG_FILE" ]; then
+    echo "Startup script has already run. Skipping."
+    exit 0
+fi
+echo "Running startup script for the first time..."
+
 {cleanup_script if delete_after_startup else ''}
 
 export HOME=/root
@@ -37,7 +44,12 @@ export GIT_SSH_COMMAND="ssh -o "UserKnownHostsFile=/root/.ssh/known_hosts" -i ~/
 git config --global user.email "you@example.com"
 git config --global user.name "Your Name"
 
+echo "source /usr/share/bash-completion/completions/git" >> ~/.bashrc
+
 {startup_script}
+
+touch "$STARTUP_FLAG_FILE"
+echo "Startup script execution completed."
 '''
 
     with tempfile.TemporaryDirectory() as dir:
