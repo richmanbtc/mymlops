@@ -46,15 +46,12 @@
             "snapshot": {
               "type": "string"
             },
-            "zones": {
-              "items": {
-                "type": "string"
-              },
-              "type": "array"
+            "zone_regex": {
+              "type": "string"
             }
           },
           "required": [
-            "zones",
+            "zone_regex",
             "machine_type",
             "snapshot"
           ],
@@ -127,15 +124,12 @@
             "snapshot": {
               "type": "string"
             },
-            "zones": {
-              "items": {
-                "type": "string"
-              },
-              "type": "array"
+            "zone_regex": {
+              "type": "string"
             }
           },
           "required": [
-            "zones",
+            "zone_regex",
             "machine_type",
             "snapshot"
           ],

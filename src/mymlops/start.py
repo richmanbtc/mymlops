@@ -16,8 +16,9 @@ def do_start(start_config):
 
     vm_name = 'mymlops-' + now.strftime('%Y%m%d-%H%M%S')
     instance_config = start_config['instance']
-    zones = instance_config['zones']
-    zone = gce_select_zone(zones)
+    zone_regex = instance_config['zone_regex']
+    accelerator = instance_config.get('accelerator')
+    zone = gce_select_zone(zone_regex, accelerator)
 
     command = start_config['command']
 
@@ -34,8 +35,8 @@ cd repo
     gce_create(
         vm_name=vm_name,
         zone=zone,
-        accelerator=instance_config.get('accelerator'),
-        machine_type=instance_config.get('machine_type'),
+        accelerator=accelerator,
+        machine_type=instance_config['machine_type'],
         snapshot=instance_config['snapshot'],
         label='start',
         startup_script=script,

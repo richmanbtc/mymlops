@@ -51,8 +51,9 @@ def do_commit(commit_config, path, artifacts, notes, instance):
 
     vm_name = 'mymlops-' + now.strftime('%Y%m%d-%H%M%S')
     instance_config = commit_config['instance']
-    zones = instance_config['zones']
-    zone = gce_select_zone(zones)
+    zone_regex = instance_config['zone_regex']
+    accelerator = instance_config.get('accelerator')
+    zone = gce_select_zone(zone_regex, accelerator)
 
     command = commit_config['command']
     output_repo_dir = '/root/output_repo'
@@ -66,7 +67,7 @@ def do_commit(commit_config, path, artifacts, notes, instance):
         'branch': repo_branch,
         'artifacts': artifacts,
         'notes': notes if notes else None,
-        'accelerator': instance_config.get('accelerator'),
+        'accelerator': accelerator,
     }
     metadata_gzip_base64 = base64.b64encode(gzip.compress(
         json.dumps(metadata, indent=4, sort_keys=True).encode('utf-8'))).decode('ascii')
@@ -115,8 +116,8 @@ git push origin "{output_repo_branch}"
     gce_create(
         vm_name=vm_name,
         zone=zone,
-        accelerator=instance_config.get('accelerator'),
-        machine_type=instance_config.get('machine_type'),
+        accelerator=accelerator,
+        machine_type=instance_config['machine_type'],
         snapshot=instance_config['snapshot'],
         label='commit',
         metadata=gce_metadata,

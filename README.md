@@ -133,3 +133,10 @@ gcloud compute accelerator-types list --format="table(zone, name, description)" 
 - Build what I’ll use.
 - Don’t build what I won’t.
 - Remove anything I’ve built but don’t use. 
+
+### zone selection
+
+- filter by regex
+- filter by gpu availability
+- sort by count_by_region, cost
+- select first
