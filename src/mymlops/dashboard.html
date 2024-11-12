@@ -55,7 +55,7 @@
         </tr>
         </thead>
         <tbody>
-        <tr v-for="(item, index) in items" :key="index">
+        <tr v-for="(item, index) in items" :key="item.notebook_url">
             <td :style="item.status_style">{{ item.status_fmt }}</td>
             <td>{{ item.timestamp_fmt }}</td>
             <td>{{ item.repository_fmt }}</td>
