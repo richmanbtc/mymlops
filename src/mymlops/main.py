@@ -25,10 +25,11 @@ def validate():
 @click.option('-a', '--artifacts', is_flag=True, show_default=True, default=False)
 @click.option('-n', '--notes', show_default=True, default='')
 @click.option('-i', '--instance', show_default=True, default='')
-def commit(path, artifacts, notes, instance):
+@click.option('-k', '--keep_instance', is_flag=True, show_default=True, default=False)
+def commit(path, artifacts, notes, instance, keep_instance):
     """run notebook and save outputs like kaggle commit"""
     config = read_config()
-    do_commit(config['commit'], path, artifacts, notes, instance)
+    do_commit(config['commit'], path, artifacts, notes, instance, keep_instance)
 
 
 @cli.command()

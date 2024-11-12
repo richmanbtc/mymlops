@@ -11,7 +11,7 @@ from .gce_create import gce_create
 from .gce_zones import gce_select_zone, gce_get_zone
 
 
-def do_commit(commit_config, path, artifacts, notes, instance):
+def do_commit(commit_config, path, artifacts, notes, instance, keep_instance):
     print(f'path {path}')
     assert path[-6:] == '.ipynb'
 
@@ -122,7 +122,7 @@ git push origin "{output_repo_branch}"
         label='commit',
         metadata=gce_metadata,
         startup_script=script,
-        delete_after_startup=True
+        delete_after_startup=not keep_instance
     )
 
     @retry(tries=20, delay=5)
